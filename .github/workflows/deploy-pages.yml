@@ -1,0 +1,97 @@
+name: deploy pages
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+  workflow_dispatch:
+
+jobs:
+  upload-static-a:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: static-a
+          path: static-a
+  upload-static-b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: static-b
+          path: static-b
+  upload-spa-relative:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.4.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F spa-relative build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spa-relative
+          path: spa-relative/dist
+  upload-spa-root:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.4.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F spa-root build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spa-root
+          path: spa-root/dist
+  aggregate-and-upload:
+    needs:
+      - upload-static-a
+      - upload-static-b
+      - upload-spa-relative
+      - upload-spa-root
+    runs-on: ubuntu-latest
+    steps:
+      - run: mkdir pages
+      - uses: actions/download-artifact@v4
+        with:
+          name: static-a
+          path: pages/static-a
+      - uses: actions/download-artifact@v4
+        with:
+          name: static-b
+          path: pages/static-b
+      - uses: actions/download-artifact@v4
+        with:
+          name: spa-relative
+          path: pages/spa-relative
+      - uses: actions/download-artifact@v4
+        with:
+          name: spa-root
+          path: pages
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+  deploy:
+    needs: aggregate-and-upload
+    permissions:
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/configure-pages@v4
+      - uses: actions/deploy-pages@v4
+        id: deployment
