@@ -1,0 +1,5 @@
+packages:
+  - static-a
+  - static-b
+  - spa-relative
+  - spa-root

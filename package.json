@@ -1,0 +1,9 @@
+{
+  "name": "gh-pages-actions-multiple-pages",
+  "version": "1.0.0",
+  "description": "github pages multiple pages deployed by github actions poc",
+  "main": "index.js",
+  "author": "euxn23",
+  "license": "MIT",
+  "packageManager": "pnpm@8.15.7"
+}
